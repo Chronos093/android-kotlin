@@ -1,2 +1,2 @@
-# android-kotlin
-Desenvolvimento Android com Kotlin
+# Android/Kotlin
+Módulo II - Android: Desmistificando Kotlin
