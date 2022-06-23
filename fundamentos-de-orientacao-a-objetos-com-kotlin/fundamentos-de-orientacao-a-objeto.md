@@ -97,4 +97,165 @@ class Medicamento {
 
 
 ## Imutabilidade dos parâmetros dos construtores secundários
->
+>Conforme demonstrado anteriormente, os parâmetros dos construtor secundário são declarados sem utilizar as palavras reservadas 'val' ou 'var', como nesse exemplo:
+```kotlin
+class Medicamento {
+    constructor(formula: String, posologia: String)
+}
+```
+>Caso uma tentativa de fazer o contrário seja feita, digamos declarando a fórmula como `val formula: String`, um erro de compilação será emitido com a seguinte mensagem apresentada.
+
+`Kotlin: 'val' on secondary constructor parameter is not allowed`
+
+>Em kotlin, tanto os parâmetros de funções quanto os de construtores são imutáveis por definiçaõ, o que elimina a necessidade de se utilizar 'val' ou 'var' nesse caso. A utilização de 'val' ou 'var' em construtores é restrita ao construtor primário de uma classe para definir a mutabilidade das suas propriedades, será imutável ou não, dado que apenas ele pode gerar propriedades para uma classe.
+
+
+>Por exemplo, digamos que a fórmula de um medicamento nunca possa alterada, uma vez que seja definida no momento da criação de uma instância, mas que a sua posologia depende de uma regra externa a essa classe. Dessa forma, podemos modelar a classe Medicamento conforme apresentado a seguir:
+
+`class Medicamento(val formula: String, var posologia: String)`
+
+>Tendo sido o parâmetro formula declarado imutável, a propriedade homônima da classe Medicamento também será somente leitura. Ao tentar atribuir valor a ela a partir de uma instância o seguinte erro será apresentado:
+
+`Error:(8, 5) Kotlin: Val cannot be reassigned`
+
+>O mesmo erro não ocorrerá ao atribuir valor a propriedade posologia a partir de uma instância da classe Medicamento, uma vez que o parâmetro posologia, presente no construtor primário, foi declarado mutável.
+
+## Instanciando uma classe
+>Para criar uma instância de uma classe usamos seu nome e construtor. Em kotlin não utilizamos a palavra-chave'não', como mostra o exemplo:
+
+```kotlin
+class Medicamento(val formula: String, val posologia: String) {
+}
+
+val medicamento = Medicamento("C8H9NO2", "...")
+```
+
+>Aqui devemos observar que se uma classe possui um construtor, sendo ele primário ou secundário, o mesmo deve ser invocado. Por exemplo, no código abaixo a classe Medicamento possui um construtor secundário, o que torna obrigatório instanciá-la da forma `Medicamento("C8H9N02", "...")`.
+
+```kotlin
+class Medicamento {
+    constructor(formula: String, posologia: String)
+}
+```
+
+>Caso isso não seja feito e a classe seja instanciada como 'Medicamento()', sem que os argumentos sejam fornecidos para o  construtor, teremos um erro de compilação com a mesagem, `Error:(10, 35) Kotlin: No value passed for parameter 'formula' Error:(10, 35) Kotlin: No value passed for parameter 'posologia'`, onde 'formula' e 'posologia' são propriedades da classe.
+
+## Funções membro
+>Funções membro são funções declaradas dentro de classes. As regras que aprendemos anteriormente para a escrita de funções também se aplicam aqui com uma exceção, funções membro podem utilizar a palavra-chave 'this' para referenciar a instância atual.
+
+
+>Funções membro sempre devem ser incocadas a partir de instâncias da classe. No Exemplo a seguir vemos um exemplo onde invocamos uma função a partir de ima instância de uma classe 'Medicamento'.
+
+```kotlin
+class Medicamento(val formula: String, val posologia: String) {
+
+    fun contem(formula: String) = this.formula.contains(formula, ignoreCase = true)
+}
+
+fun main() {
+    val medicamento = Medicamento("C8H9NO2", "...")
+
+    if (medicamento.contem("C8H9NO2")) {
+        println("Este medicamento contém paracetamol")
+    }
+}
+```
+>Observe que na Linha 3 utilizamos 'this' para diferenciar entre a propriedade e o parâmentro 'formula'. Tenha cuidado ao usar 'this' em classes que possuam apenas um construtores secundários, uma vez que eles não geram propriedades e, portanto, devem iniciar a classe ou delegar isso para um outro construtor. Entendido isso, caso uma classe possua apenas um construtor secundário ela deve conter propriedades que precisam ser iniciadas dentro dele.
+
+
+>Por exemplo, o código a seguir vai falhar ao usarmos a palavra-chave 'this', pois a classe nãp possui uma propriedade chamada 'formula'.
+
+```kotlin
+class Medicamento {
+    constructor(formula: String, posologia: String)
+
+    fun contem(formula: String) = this.formula.contains(formula, ignoreCase = true)
+}
+```
+
+>No código o erro emitido pelo compilador será `Error:(6, 40) Kotlin: Unresolved reference: formula`. Para corrigir esse erro a classe precisa iniciar uma propriedade chamada formula no construtor secundário, como o exemplo a seguir.
+
+```kotlin
+class Medicamento {
+    val formula: String
+    val posologia: String
+
+    constructor(formula: String, posologia: String) {
+        this.formula = formula
+        this.posologia = posologia
+    }
+
+    fun contem(formula: String) = this.formula.contains(formula, ignoreCase = true)
+}
+```
+
+>Contudo, o código acima é desnecessariamente longo e nesses casos podemos declarar a classe com um construtor primário, como vemos no proximo código.
+
+```kotlin
+class Medicamento(val formula: String, val posologia: String) {
+
+    fun contem(formula: String) = this.formula.contains(formula, ignoreCase = true)
+}
+```
+>Sendo assim, o código acima é equivalente ao anterior e também resolve o problema do 'this', porém de um jeito mais sucinto.
+
+## Construtores e blocos de inicialização
+>A delegação de um construtor secundário para o construtor primário ocorrerá como sendo a primeira instrução no construtor secundário. Isso que dizer, uma vez que eles passam a fazer parte do construtor primário, cada bloco de inicialização será executado antes de qualquer construtor secundário.
+
+
+>Fundamentalmente, caso uma classe não possua nenhum construtor e não seja abstrata, um construtor público vazio lhe será atribuído. Suponho que nessa mesma classe não existia um construtor primário declarado, a delegação ocorrerá de forma implícita, como demonstrada o código a seguir.
+
+```kotlin
+class Medicamento {
+     val formula: String
+
+     constructor(formula: String, posologia: String) {
+         this.formula = formula
+
+         println("Construtor secundário")
+     }
+
+     init {
+         println("Bloco de inicialização")
+     }
+}
+```
+
+>No exemplo acima, não importando a ordem da declaração do construtor secundário e do bloco de inicialização, as mensagens exibidas serão "Bloco de inicialização" e "Construtor secundário", nessa ordem.
+
+## Níveis de acesso
+>Em kotlin, não informar um nível de acesso para um tipo faz com que o modificador 'public' seja automaticamente aplicado. Além desse, geralmente não utilizado devido a redundância que causa, Kotlin possui três níveis de acesso. Dentre eles, 'protected' pode ser utilizado apenas por classes aninhadas. Quando utilizado em nível de arquivo, um erro será emitido pelo compilador, como no código a baixo.
+
+```kotlin
+protected class Medicamento constructor(val formula: String, var posologia: String)
+
+Error:(3, 1) Kotlin: Modifier 'protected' is not applicable inside 'file'
+```
+
+>No proximo código utilizamos o modificador 'protected', que é sintaticamente permitido porque 'Tributacao' não está me nível de arquivo e é uma classe aninhada em 'Medicamento'.
+
+```kotlin
+class Medicamento {
+
+    protected class Tributacao
+}
+```
+
+>Private é um nível de acesso que restringe o escopo de utilização da classe apenas ao arquivo no qual ele foi declarada. Ao tentar utilizar uma classe 'private' fora do arquivo no qual ela foi declarada, um erro será emitido pelo compilador prematuramente, no momento da sua importação, como no exemplo.
+
+```kotlin
+private class Medicamento constructor(val formula: String, var posologia: String)
+
+import br.com.devmedia.kotlin.a.Medicamento
+
+fun main(args: Array) {
+     println(Medicamento("C8H9NO2", "...12 anos ou mais variam de 500 a 1000 mg/
+     dose com intervalos de 4 a 6 horas..."))
+}
+
+
+//Error:(3, 33) Kotlin: Cannot access 'Medicamento': it is private in file
+```
+*Em kotlin, a declaração de um pacote é feita com a palcavra reservada* 'package'*, seguida do nome do pacote. A importação de uma classe de outro pacote é feita com a palavra* 'import'*, seguida do nome completo da classe.*
+
+>O terceiro modificador de acesso é 'internal', que permite criar uma instância da classe em qualquer lugar no módulo no qual ela foi declarado. Para Kotlin um módulo é um conjunto de fontes compilados junto. Isso torna esse comportamento difícil de ser verificado em um mesmo módulo do Intellij IDEA, projeto do Maven, Ant task, etc.
