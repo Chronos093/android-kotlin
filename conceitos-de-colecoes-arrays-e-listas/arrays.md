@@ -69,7 +69,21 @@ fun main(){
     val  salariosMaiorQue2500 = salarios.filter { it > 2500.0 }
     // 'filter' faz um filtro dentro do array buscando os valores que forem validados pela expressão { it > 2500.0 }
     salariosMaiorQue2500.forEach { println(it) }
-}
+
+    println("-----------------")
+    // conta quantos salarios estão dentro de 2.000 ~ 5.000
+    println(salarios.count { it in 2000.0..5000.0})
+
+    println("-----------------")
+    // Busca o valor 2250.0 no array
+    println(salarios.find { it == 2250.0})
+    // se não encontrar
+    println(salarios.find {it == 500.0})
+    // Procura qual elemento da array, retorna true ou false
+    println("-----------------")
+    //retorna true
+    println(salarios.any { it == 1000.0}) 
+    //retorna false
+    println(salarios.any { it == 500.0}) 
 }
 ```
-
